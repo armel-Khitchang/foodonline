@@ -57,17 +57,23 @@ $("#commentForm").submit(function(e){
 })
 
 $(document).ready(function(){
-    $(".filter-checkbox").on("click", function(){
+    $(".filter-checkbox, #price-filter-btn").on("click", function(){
         console.log("checkbox clicked");
 
         let filter_object = {}
+
+        let min_price = $("#max_price").attr("min")
+        let max_price = $("#max_price").val()
+
+        filter_object.min_price = min_price;
+        filter_object.max_price = max_price;
 
         $(".filter-checkbox").each(function(){
             let filter_value = $(this).val()
             let filter_key = $(this).data("filter")
 
-            // console.log("Filter value is:  ", filter_value);
-            // console.log("Filter key is :  ", filter_key);
+            console.log("Filter value is:  ", filter_value);
+            console.log("Filter key is :  ", filter_key);
 
             filter_object[filter_key] = Array.from(document.querySelectorAll('input[data-filter=' +filter_key+ ']:checked')).map(function(element){
                 return element.value
@@ -87,4 +93,150 @@ $(document).ready(function(){
             }
         })
     })
+
+    $("#max_price").on("blur", function(){
+        let min_price = $(this).attr("min")
+        let max_price = $(this).attr("max")
+        let current_price = $(this).val()
+
+        // console.log("Value min_price is:", min_price)
+        // console.log("Value max_price is:", max_price)
+        // console.log("Value current_price is:", current_price)
+
+        if (current_price < parseInt(min_price) ||  current_price > parseInt(max_price)){
+            
+            min_price = Math.round(min_price*100) / 100
+            max_price = Math.round(max_price*100) / 100
+
+            alert("Price must between $"+min_price+' and $'+max_price)
+            $(this).val(min_price)
+            $("#range").val(min_price)
+
+            $(this).focus()
+
+            return false
+
+        }
+         
+    })
+
+
+        // add to cart functionnality
+    $(".add-to-cart-btn").on("click", function(){
+
+        let this_val = $(this)
+        let index = this_val.attr("data-index")
+
+        let quantity = $(".product-quantity-"+ index).val()
+        let product_title = $(".product-title-"+ index).val()
+        
+        let product_id = $(".product-id-"+ index).val()
+        let product_price = $(".current-product-price-"+ index).text()
+
+        let product_image = $(".product-image-"+ index).val()
+        let product_pid = $(".product-pid-"+ index).val()
+
+
+
+        console.log("quantity : ", quantity);
+        console.log("title : ", product_title);
+        console.log("product_price: ",product_price);
+        console.log("product_id: ", product_id);
+        console.log("product_pid :  ",product_pid );
+        console.log("product_image: ",product_image);
+        console.log("index: ",index);
+        console.log("current element :  ",this_val );
+
+        $.ajax({
+            url: '/add-to-cart',
+            data: {
+                'id':product_id,
+                'pid':product_pid,
+                'qty':quantity,
+                'image':product_image, 
+                'title':product_title,
+                'price':product_price,        
+            },
+            dataType: 'json',
+            beforeSend: function(){
+                console.log("Adding Product to Cart......");
+            },
+            success: function(response){
+                this_val.html("✓")
+                console.log("item added to cart......");
+                $(".cart-items-count").text(response.totalcartitems) 
+            }
+        });
+        
+    })
+
+
+    $(".delete-product").on("click", function(){
+        let product_id = $(this).attr("data-product")
+        let this_val = $(this)
+        
+        console.log("Product ID :  ", product_id);
+        
+        $.ajax({
+            url:'/delete-from-cart',
+            data:{
+                'id':product_id,
+            },
+            dataType:'json',
+            beforeSend:function(){
+                // this_val.html("Added To Cart")
+                this_val.attr('disabled',true);
+            },
+            success:function(response){
+                console.log(response);
+                $(".cart-items-count").text(response.totalcartitems)
+                this_val.attr('disabled',false);
+                $("#cart-list").html(response.data)
+            }
+        });
+    })
 })
+
+
+
+
+
+
+
+
+// // add to cart functionnality
+// $(".add-to-cart-btn").on("click", function(){
+//     let quantity = $("#product-quantity").val()
+//     let product_title = $(".product-title").val()
+//     let product_id = $(".product-id").val()
+//     let product_price = $("#current-product-price").text()
+//     let this_val = $(this)
+
+
+//     console.log("quantity : ", quantity);
+//     console.log("title : ", product_title);
+//     console.log("product_id: ", product_id);
+//     console.log("product_price: ",product_price);
+//     console.log("current element :  ",this_val );
+
+//     $.ajax({
+//         url: '/add-to-cart',
+//         data: {
+//             'id':product_id,
+//             'qty':quantity,
+//             'title':product_title,
+//             'price':product_price,            
+//         },
+//         dataType: 'json',
+//         beforeSend: function(){
+//             console.log("Adding Product to Cart......");
+//         },
+//         success: function(response){
+//             this_val.html('item added to cart');
+//             console.log("item added to cart......");
+//             $(".cart-items-count").text(response.totalcartitems) 
+//         }
+//     });
+    
+
+// })
